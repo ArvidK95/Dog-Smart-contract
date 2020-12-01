@@ -1,0 +1,74 @@
+pragma solidity 0.5.12;
+        
+        //A contract where people can input the name, race and owner name of their dogs into a mapping through their address. 
+        //The people that have entered information about their dogs can access the info through their individual address
+        
+contract Dogs{
+    
+    struct Dog{
+        string name;
+        string race;
+        uint age;
+        string owner;
+    }
+    
+    address public addressOwner;
+    
+    constructor() public {
+        addressOwner = msg.sender;
+    }
+    
+    modifier contractOwner(){
+        require(msg.sender == addressOwner);
+        _;
+    }
+    
+    mapping(address => Dog) private dogs;
+    address[] private dogOwners;
+    
+    function createDog(string memory name, string memory race, uint age, string memory owner) public {
+        require(age <= 30, "Your dog is too old, you can input an age below 30 years");
+        address creator = msg.sender;
+        
+        Dog memory newDog;
+        newDog.name = name;
+        newDog.race = race;
+        newDog.age = age;
+        newDog.owner = owner;
+        
+        dogs[creator] = newDog;
+        dogOwners.push(msg.sender);
+        assert(
+            keccak256(
+                abi.encodePacked(
+                    dogs[msg.sender].name,
+                    dogs[msg.sender].race,
+                    dogs[msg.sender].age,
+                    dogs[msg.sender].owner))
+            
+            ==
+            
+            keccak256(
+                abi.encodePacked(
+                    newDog.name,
+                    newDog.race,
+                    newDog.age,
+                    newDog.owner)));
+                    
+                
+            
+    }
+    
+    function getDog() public view returns(string memory name, string memory race, uint age, string memory owner){
+        return(dogs[msg.sender].name, dogs[msg.sender].race, dogs[msg.sender].age, dogs[msg.sender].owner);
+    }
+    
+    function deleteDog(address creator) public contractOwner{
+        delete dogs[creator];
+    }
+    
+    function getOwner(uint index) public view contractOwner returns(address){
+        return dogOwners[index];
+    }
+    
+}
